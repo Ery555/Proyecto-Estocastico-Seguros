@@ -1,7 +1,13 @@
 @import "tailwindcss";
 
 body {
-  background-color: #020617;
-  color: #f8fafc;
-  font-family: system-ui, -apple-system, sans-serif;
+  background-color: #f8f7f4;
+  color: #0f1e36;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Personalización sutil de sliders */
+input[type="range"] {
+  height: 6px;
+  border-radius: 999px;
 }

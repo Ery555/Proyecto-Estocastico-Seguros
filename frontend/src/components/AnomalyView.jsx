@@ -4,9 +4,9 @@ import {
   ComposedChart, Line, Scatter, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Legend
 } from "recharts";
-import { ShieldAlert, Sparkles } from "lucide-react";
+import { ShieldAlert, Sparkles, ArrowRight } from "lucide-react";
 
-export default function AnomalyView() {
+export default function AnomalyView({ mathMode, onNext }) {
   const [zThreshold, setZThreshold] = useState(2.8);
   const [data, setData] = useState(null);
 
@@ -15,7 +15,7 @@ export default function AnomalyView() {
   }, [zThreshold]);
 
   if (!data) {
-    return <div className="p-8 text-slate-400 animate-pulse">Evaluando estacionariedad gaussiana de residuos...</div>;
+    return <div className="p-8 text-slate-500 animate-pulse">Auditando eventos extraordinarios de Seguros Illimani...</div>;
   }
 
   const chartData = data.residuals_timeline.map((item) => ({
@@ -28,101 +28,134 @@ export default function AnomalyView() {
 
   return (
     <div className="space-y-6">
-      {/* Panel de Control Z-Score y Prueba de Normalidad Shapiro-Wilk */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900 border border-slate-800 p-5 rounded-xl">
+      {/* Banner de Storytelling */}
+      <div className="bg-white border-l-4 border-l-rose-600 border border-slate-200 rounded-xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-700">
+            <ShieldAlert className="w-4 h-4" />
+            <span>Paso 3 de la Historia: ¿Cómo separamos el azar normal de una catástrofe?</span>
+          </div>
+          <p className="text-sm text-slate-700">
+            Si ocurre un deslizamiento extraordinario o un fraude masivo, no podemos tratarlo como un mes normal. Este filtro detecta automáticamente <strong>{data.anomalies_table.length} choques anómalos</strong> en los últimos 4 años para inyectarlos como escenarios de estrés en la simulación final.
+          </p>
+        </div>
+        <button
+          onClick={onNext}
+          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0F1E36] text-white text-xs font-semibold hover:bg-slate-800 transition cursor-pointer"
+        >
+          <span>Simular Solvencia en Paso 4</span>
+          <ArrowRight className="w-4 h-4 text-amber-400" />
+        </button>
+      </div>
+
+      {/* Panel de Control Z-Score y Prueba de Normalidad */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white border border-slate-200 p-5 rounded-xl shadow-xs">
         <div>
-          <label className="block text-xs uppercase tracking-wider text-slate-400 mb-2">
-            Sensibilidad del Filtro (Z-Score Robusto): <span className="text-rose-400 font-bold">±{zThreshold}σ</span>
+          <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+            {mathMode ? "Umbral Z-Score Robusto (MAD): " : "Rigor del Detector de Alertas: "}
+            <span className="text-rose-600 font-bold">±{zThreshold}σ</span>
           </label>
           <input
             type="range" min="1.8" max="4.0" step="0.1" value={zThreshold}
             onChange={(e) => setZThreshold(Number(e.target.value))}
-            className="w-full accent-rose-500 cursor-pointer"
+            className="w-full accent-rose-600 cursor-pointer"
           />
           <p className="text-xs text-slate-500 mt-1">
-            Banda de control: ±Bs {metrics.upper_control_band_bs.toLocaleString()}
+            Tolerancia normal: ±Bs {metrics.upper_control_band_bs.toLocaleString()}
           </p>
         </div>
 
-        <div className="bg-slate-950/70 p-3.5 rounded-lg border border-slate-800 flex items-center justify-between">
+        <div className="bg-rose-50/70 p-3.5 rounded-lg border border-rose-200 flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-400">Normalidad Shapiro-Wilk (Sin Filtrar)</p>
-            <p className="text-base font-bold text-rose-400">
-              p = {metrics.raw_normality_shapiro_p} (Rechaza Normalidad)
+            <p className="text-xs text-rose-900 font-medium">
+              {mathMode ? "Test Shapiro-Wilk (Datos Crudos)" : "Datos Sin FiltrarCatástrofes"}
+            </p>
+            <p className="text-sm font-bold text-rose-700 mt-0.5">
+              {mathMode
+                ? `p = ${metrics.raw_normality_shapiro_p} (No Gaussiano)`
+                : `${data.anomalies_table.length} eventos distorsionan el promedio`}
             </p>
           </div>
-          <ShieldAlert className="text-rose-500 w-7 h-7" />
+          <ShieldAlert className="text-rose-600 w-7 h-7 shrink-0" />
         </div>
 
-        <div className="bg-slate-950/70 p-3.5 rounded-lg border border-slate-800 flex items-center justify-between">
+        <div className="bg-emerald-50/70 p-3.5 rounded-lg border border-emerald-200 flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-400">Normalidad Proceso Limpio (Cap. 2)</p>
-            <p className="text-base font-bold text-emerald-400">
-              p = {metrics.clean_normality_shapiro_p} (Ruido Blanco Gaussiano)
+            <p className="text-xs text-emerald-900 font-medium">
+              {mathMode ? "Test Shapiro-Wilk (Proceso Limpio Cap. 2)" : "Comportamiento tras el Filtro"}
+            </p>
+            <p className="text-sm font-bold text-emerald-700 mt-0.5">
+              {mathMode
+                ? `p = ${metrics.clean_normality_shapiro_p} (Ruido Blanco Gaussiano)`
+                : "Proceso Estable y 100% Auditable"}
             </p>
           </div>
-          <Sparkles className="text-emerald-400 w-7 h-7" />
+          <Sparkles className="text-emerald-600 w-7 h-7 shrink-0" />
         </div>
       </div>
 
-      {/* Gráfico de Bandas de Control sobre Residuos Estocásticos */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 className="text-base font-semibold text-white mb-1">
-          Diagnóstico de Innovaciones Estocásticas (e<sub>t</sub> = Y<sub>t</sub> − Ŷ<sub>t</sub>) y Detección de Choques Extremos
+      {/* Gráfico de Bandas de Control */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <h3 className="text-base font-bold text-[#0F1E36] mb-1">
+          {mathMode
+            ? "Proceso de Innovaciones Estocásticas (e_t = Y_t − Ŷ_t) con Bandas ±Zσ"
+            : "Radar de Desviaciones Mensuales: Meses Normales vs. Choques Extraordinarios"}
         </h3>
-        <p className="text-xs text-slate-400 mb-4">
-          Las observaciones que perforan el umbral ±{zThreshold}σ (estimado con MAD robusto) se aíslan como eventos catastróficos o anomalías operativas.
+        <p className="text-xs text-slate-500 mb-4">
+          Los puntos rojos que rompen las líneas punteadas son siniestros atípicos que superan la variación natural del negocio.
         </p>
         <div className="h-72">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-              <XAxis dataKey="dateShort" stroke="#94a3b8" fontSize={11} />
-              <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="dateShort" stroke="#475569" fontSize={11} />
+              <YAxis stroke="#475569" fontSize={11} tickFormatter={(v) => `Bs ${(v / 1000).toFixed(0)}k`} />
               <Tooltip
-                contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155" }}
+                contentStyle={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", color: "#0f1e36" }}
                 formatter={(v) => `Bs ${Number(v).toLocaleString()}`}
               />
               <Legend />
-              <ReferenceLine y={metrics.upper_control_band_bs} stroke="#f43f5e" strokeDasharray="4 4" label={{ value: `+${zThreshold}σ`, fill: "#f43f5e", fontSize: 11 }} />
-              <ReferenceLine y={metrics.lower_control_band_bs} stroke="#f43f5e" strokeDasharray="4 4" label={{ value: `-${zThreshold}σ`, fill: "#f43f5e", fontSize: 11 }} />
-              <ReferenceLine y={0} stroke="#475569" />
-              <Line type="monotone" dataKey="residual_bs" stroke="#94a3b8" strokeWidth={1.8} dot={{ r: 2 }} name="Residuo Estocástico (Bs)" />
-              <Scatter dataKey="anomalyPoint" fill="#f43f5e" name="Anomalía Detectada" />
+              <ReferenceLine y={metrics.upper_control_band_bs} stroke="#e11d48" strokeDasharray="4 4" label={{ value: `+${zThreshold}σ`, fill: "#e11d48", fontSize: 11 }} />
+              <ReferenceLine y={metrics.lower_control_band_bs} stroke="#e11d48" strokeDasharray="4 4" label={{ value: `-${zThreshold}σ`, fill: "#e11d48", fontSize: 11 }} />
+              <ReferenceLine y={0} stroke="#64748b" />
+              <Line type="monotone" dataKey="residual_bs" stroke="#475569" strokeWidth={1.8} dot={{ r: 2 }} name="Variación Mensual (Bs)" />
+              <Scatter dataKey="anomalyPoint" fill="#e11d48" name="Evento Extraordinario Aislado" />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Tabla de Eventos Anómalos Detectados */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-white mb-3">
-          Bitácora de Eventos Anómalos Aislados ({data.anomalies_table.length} eventos detectados)
+      {/* Bitácora de Eventos */}
+      <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+        <h3 className="text-sm font-bold text-[#0F1E36] mb-3">
+          Bitácora de Auditoría: Eventos Extraordinarios Detectados ({data.anomalies_table.length})
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-800 text-xs uppercase text-slate-400">
-                <th className="py-2 px-3">Periodo</th>
-                <th className="py-2 px-3">Reclamo Real</th>
-                <th className="py-2 px-3">Esperado (SARIMA)</th>
-                <th className="py-2 px-3">Desviación (e<sub>t</sub>)</th>
-                <th className="py-2 px-3">Z-Score Robusto</th>
-                <th className="py-2 px-3">Clasificación</th>
+              <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-600">
+                <th className="py-2.5 px-3">Mes Detectado</th>
+                <th className="py-2.5 px-3">Monto Reclamado</th>
+                <th className="py-2.5 px-3">Esperado por Estacionalidad</th>
+                <th className="py-2.5 px-3">Sobrecosto Atípico</th>
+                {mathMode && <th className="py-2.5 px-3">Z-Score Robusto</th>}
+                <th className="py-2.5 px-3">Diagnóstico Operativo</th>
               </tr>
             </thead>
             <tbody>
               {data.anomalies_table.map((row) => (
-                <tr key={row.date} className="border-b border-slate-800/50 hover:bg-slate-800/40">
-                  <td className="py-2.5 px-3 font-mono text-white">{row.date}</td>
+                <tr key={row.date} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="py-2.5 px-3 font-mono font-semibold text-[#0F1E36]">{row.date}</td>
                   <td className="py-2.5 px-3">Bs {row.actual_bs.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 text-slate-400">Bs {row.expected_bs.toLocaleString()}</td>
-                  <td className="py-2.5 px-3 font-semibold text-rose-400">
+                  <td className="py-2.5 px-3 text-slate-500">Bs {row.expected_bs.toLocaleString()}</td>
+                  <td className="py-2.5 px-3 font-bold text-rose-600">
                     {row.residual_bs > 0 ? "+" : ""}Bs {row.residual_bs.toLocaleString()}
                   </td>
-                  <td className="py-2.5 px-3 font-mono font-bold text-amber-400">{row.z_score}σ</td>
+                  {mathMode && (
+                    <td className="py-2.5 px-3 font-mono font-bold text-amber-700">{row.z_score}σ</td>
+                  )}
                   <td className="py-2.5 px-3">
-                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
                       {row.anomaly_type}
                     </span>
                   </td>
